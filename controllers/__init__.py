@@ -10,3 +10,7 @@ from pushoutcontroller import PushoutController
 from bouncecontroller import BounceController
 from landmarkcirclecontroller import LandmarkCircleController
 from flowcontroller import FlowController
+from outlierbumpcontroller import OutlierBumpController
+from linebumpcontroller import LineBumpController
+
+from landmarkfilter import thin_scan
