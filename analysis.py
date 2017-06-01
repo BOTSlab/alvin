@@ -2,7 +2,7 @@
 
 import pyglet
 import matplotlib.pyplot as plt
-from drawing import *
+from common.drawing import *
 
 def init(output_dir):
     global all_steps, all_sec_moments, output_file
@@ -12,7 +12,6 @@ def init(output_dir):
     plt.title("Second Moment")
 
     output_file = open('{}/sec_moment.dat'.format(output_dir), 'wa')
-
 
 def get_sec_moment(pucks):
     # Find the centroid of all pucks (not including immobile pucks).
