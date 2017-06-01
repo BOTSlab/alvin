@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import pyglet, pymunk, pymunk.pyglet_util, copy, os, sys, shutil
+import pyglet, pymunk, pymunk.pyglet_util, copy, os, sys, shutil, time
 
 from math import pi, cos, sin, sqrt
 from pyglet.window import key
 from pyglet.gl import *
 from pymunk import Vec2d, ShapeFilter
-from random import seed, randint, choice
+from random import seed, randint, choice, uniform
 from PIL import Image
 
 from puck import Puck
@@ -33,7 +33,8 @@ class AlvinSim(pyglet.window.Window):
 
     # Analysis related
     steps = 0
-    capture_interval = 20
+    start_time = time.clock()
+    capture_interval = 10
     #collisions = 0
     #cum_speed = 0
 
@@ -50,6 +51,7 @@ class AlvinSim(pyglet.window.Window):
         # will actually be set in the call to 'super' below.
         w = config.getint("AlvinSim", "width")
         h = config.getint("AlvinSim", "height")
+        self.circ_border = config.getboolean("AlvinSim", "circ_border")
         self.number_robots = config.getint("AlvinSim", "number_robots")
         self.number_pucks = config.getint("AlvinSim", "number_pucks")
         self.number_puck_kinds = config.getint("AlvinSim", "number_puck_kinds")
@@ -76,17 +78,19 @@ class AlvinSim(pyglet.window.Window):
         self.draw_options.flags = self.draw_options.DRAW_SHAPES
 
         # Help text
+        """
         self.helpLabel = pyglet.text.Label(
             'ESC: quit, arrow-keys: move, p: puck sens, l: lmark sens, c: vis ctrls, t: trans, r: rot',
             font_size=12,
             x=self.width//2, y=self.height//20,
             anchor_x='center', anchor_y='center')
+        """
 
         # Label to show various stats
         self.statsLabel = pyglet.text.Label(
             font_size=18,
-            x=self.width//2, y=self.height - 30,
-            anchor_x='center', anchor_y='center')
+            x=20, y=self.height - 30,
+            anchor_x='left', anchor_y='center', multiline=True, width=200)
 
         self.set_stats_label_text()
 
@@ -103,7 +107,10 @@ class AlvinSim(pyglet.window.Window):
         seed(trial_number)
 
         # Create the walls, robots, pucks, and landmarks
-        self.create_border_walls()
+        if self.circ_border:
+            self.create_circ_border()
+        else:
+            self.create_rect_border()
         #self.create_random_walls()
         #self.create_one_wall()
         self.robots = []
@@ -120,7 +127,7 @@ class AlvinSim(pyglet.window.Window):
         #    self.create_landmarks_ring()
         #else:
         #    self.create_landmarks_random()
-        #self.create_canned_landmarks()
+        self.create_canned_landmarks()
         if self.visualize_probes:
             self.create_probe_grid()
 
@@ -144,7 +151,7 @@ class AlvinSim(pyglet.window.Window):
         # start simulation
         self.set_visible(True)
 
-    def create_border_walls(self):
+    def create_rect_border(self):
         env_b = self.env.static_body
         walls = []
         walls.append(self.create_wall(0, 0, self.width, 0))
@@ -155,13 +162,52 @@ class AlvinSim(pyglet.window.Window):
             wall_shape.filter = ShapeFilter(categories = WALL_MASK)
         self.env.add(walls)
 
+    def get_random_pos_within_border(self, offset):
+        if self.circ_border:
+            cx, cy = self.width/2, self.height/2
+            radius = min(cx, cy)
+            #rho = uniform(0, radius)
+            #theta = uniform(0, 2*pi)
+            #return cx + rho*cos(theta), cy + rho*sin(theta)
+            dist_from_centre = float('inf')
+            while dist_from_centre > radius - offset:
+                x = randint(offset, self.width - offset)
+                y = randint(offset, self.height - offset)
+                dx = x - cx
+                dy = y - cy
+                dist_from_centre = sqrt(dx**2 + dy**2)
+            return (x, y)
+        else:
+            # Assumed to be rectangular.
+            x = randint(offset, self.width - offset)
+            y = randint(offset, self.height - offset)
+            return (x, y)
+
+    def create_circ_border(self):
+        env_b = self.env.static_body
+        walls = []
+        # n is the number of divisions
+        n = 50
+        last_angle = 0
+        cx = self.width/2
+        cy = self.height/2
+        radius = min(cx, cy)
+        for angle in [2*pi*i/n for i in range(1,n+1)]:
+            x1 = cx + radius * cos(last_angle)
+            y1 = cy + radius * sin(last_angle)
+            x2 = cx + radius * cos(angle)
+            y2 = cy + radius * sin(angle)
+            last_angle = angle
+            walls.append(self.create_wall(x1, y1, x2, y2))
+        self.env.add(walls)
+
     def create_random_walls(self):
         # A few randomly distributed walls.
         random_walls = []
         n = randint(10, 20)
         #n = 0 # Open environment
         for i in range(n):
-            x1, y1 = randint(0, self.width), randint(0, self.height)
+            x1, y1 = self.get_random_pos_within_border(0)
             angle = pi/2. * randint(0,3)
             length = randint(self.wall_thickness, self.width/2)
             x2, y2 = x1 + length*cos(angle), y1 + length*sin(angle)
@@ -193,9 +239,7 @@ class AlvinSim(pyglet.window.Window):
             offset = int(self.wall_thickness + robot.radius)
             placed = False
             while not placed:
-                x = randint(offset, self.width - offset)
-                y = randint(offset, self.height - offset)
-                robot.body.position = x, y
+                robot.body.position = self.get_random_pos_within_border(offset)
                 if self.env.shape_query(robot.shape) == []:
                     placed = True
             self.env.add(robot.body, robot.shape)
@@ -230,6 +274,10 @@ class AlvinSim(pyglet.window.Window):
                 robot.controller = LandmarkCircleController(robot, puck_mask)
             elif self.controller_name == "FlowController":
                 robot.controller = FlowController(robot, puck_mask)
+            elif self.controller_name == "OutlierBumpController":
+                robot.controller = OutlierBumpController(robot, puck_mask)
+            elif self.controller_name == "LineBumpController":
+                robot.controller = LineBumpController(robot, puck_mask)
 
             self.robots.append(robot)
 
@@ -239,9 +287,7 @@ class AlvinSim(pyglet.window.Window):
             offset = int(self.wall_thickness + puck.radius)
             placed = False
             while not placed:
-                x = randint(offset, self.width - offset)
-                y = randint(offset, self.height - offset)
-                puck.body.position = x, y
+                puck.body.position = self.get_random_pos_within_border(offset)
                 if self.env.shape_query(puck.shape) == []:
                     placed = True
             self.env.add(puck.body, puck.shape)
@@ -281,18 +327,56 @@ class AlvinSim(pyglet.window.Window):
         return landmark
 
     def create_canned_landmarks(self):
+        # Hockey puck radius = 23mm = 0.023
+        #arc_radius = 0.023 * M_TO_PIXELS
+        #pole_radius = 0.023 * M_TO_PIXELS
+        #arc_radius = 20
+
+        # One central landmark
+        #x = self.width/2
+        #y = self.height/2
+        #self.create_landmark((x, y), ARC_LANDMARK_MASK, arc_radius)
+
+        # Enter and exit arc landmarks to form a 'C'.
+        #arc_radius = 10
+        #self.create_landmark((x+15, y+10), ENTER_ARC_LANDMARK_MASK, arc_radius)
+        #self.create_landmark((x+15, y-10), EXIT_ARC_LANDMARK_MASK, arc_radius)
+
+        # Tower of landmarks
+        #x = self.width/2
+        #y_list = [self.height/2 + i for i in range(-100, 100, 20)]
+        #for y in y_list:
+        #    self.create_landmark((x, y), POLE_LANDMARK_MASK, pole_radius)
+        #self.create_landmark((x, self.height/2 + 200), ARC_LANDMARK_MASK, arc_radius)
+
+        # Two "competing" landmarks
+        #arc_radius = 20
+        #y = self.height/2
+        #self.create_landmark((self.width/2-100, y), ARC_LANDMARK_MASK, arc_radius)
+        #self.create_landmark((self.width/2+100, y), ARC_LANDMARK_MASK, arc_radius)
         # To form "1 5 0"
         #self.create_one_landmarks()
         #self.create_five_landmarks()
         #self.create_zero_landmarks()
 
         # To form "C"
-        arc_radius = 20
-        blast_radius = 10
+        #arc_radius = 20
+        #blast_radius = 10
+        #x = self.width/2
+        #y = self.height/2
+        #self.create_landmark((x, y), ARC_LANDMARK_MASK, arc_radius)
+        #self.create_landmark((x+15, y), BLAST_LANDMARK_MASK, blast_radius)
+
+        # Three vertically arranged poles
+        radius = 20
         x = self.width/2
         y = self.height/2
-        self.create_landmark((x, y), ARC_LANDMARK_MASK, arc_radius)
-        self.create_landmark((x+15, y), BLAST_LANDMARK_MASK, blast_radius)
+        dx = self.width/5
+        dy = self.height/5
+        self.create_landmark((x-dx, y+dy), POLE_LANDMARK_MASK, radius)
+        self.create_landmark((x+dx, y+dy), POLE_LANDMARK_MASK, radius)
+        self.create_landmark((x+dx, y-dy), POLE_LANDMARK_MASK, radius)
+        #self.create_landmark((x, y), POLE_LANDMARK_MASK, radius)
 
     def create_one_landmarks(self):
         x = self.width/6
@@ -353,9 +437,7 @@ class AlvinSim(pyglet.window.Window):
             offset = self.wall_thickness + landmark.radius
             placed = False
             while not placed:
-                x = randint(offset, self.width - offset)
-                y = randint(offset, self.height - offset)
-                landmark.body.position = x, y
+                landmark.body.position = self.get_random_pos_within_border(offset)
                 if self.env.shape_query(landmark.shape) == []:
                     placed = True
             self.env.add(landmark.body, landmark.shape)
@@ -387,8 +469,13 @@ class AlvinSim(pyglet.window.Window):
         pyglet.clock.unschedule(self.env.step)
 
     def set_stats_label_text(self):
+        secs = int(time.clock() - self.start_time)
+        hours = secs / 3600
+        secs -= hours * 3600
+        mins = secs / 60
+        secs -= mins * 60
         self.statsLabel.text = \
-            "steps: {}".format(self.steps)
+            "steps: {}\ntime: {}:{}:{}".format(self.steps, hours, mins, secs)
 
     """
     def collision_handler(self, arbiter, space, data):
@@ -397,21 +484,25 @@ class AlvinSim(pyglet.window.Window):
     """
 
     def visualize_for_robot(self, robot):
-        range_scan = robot.range_scanner.compute(self.env, robot, \
-                                                 self.visualize_puck_sensor)
-        landmark_scan = robot.landmark_scanner.compute(self.env, robot, \
-                                                 self.visualize_landmark_sensor)
-        #landmark_scan = robot.landmark_scanner.compute(self.env, robot, \
-        #                                         self.landmarks, \
-        #                                         self.visualize_sensors)
+        range_scan = robot.range_scanner.compute(self.env, robot)
+        landmark_scan = robot.landmark_scanner.compute(self.env, robot)
+
+        #landmark_scan = thin_scan(robot, landmark_scan, ANY_LANDMARK_MASK)
+
+        if self.visualize_puck_sensor:
+            robot.range_scanner.visualize(robot, range_scan)
+        if self.visualize_landmark_sensor:
+            robot.landmark_scanner.visualize(robot, landmark_scan)
+
         sensor_suite = SensorSuite(range_scan, landmark_scan)
         # Call the controller's react method, although we will actually
         # ignore the resulting twist here.
         robot.controller.react(robot, sensor_suite, self.visualize_controllers)
 
     def visualize_for_probe(self, probe):
-        landmark_scan = probe.landmark_scanner.compute(self.env, probe, \
-                                                 self.visualize_landmark_sensor)
+        landmark_scan = probe.landmark_scanner.compute(self.env, probe)
+        if self.visualize_landmark_sensor:
+            probe.landmark_scanner.visualize(probe, landmark_scan)
         probe.react(landmark_scan)
 
     def save_screenshot(self):
@@ -433,7 +524,7 @@ class AlvinSim(pyglet.window.Window):
         # always clear and redraw for graphics programming
         self.clear()
         self.env.debug_draw(self.draw_options)
-        self.helpLabel.draw()
+        #self.helpLabel.draw()
         self.set_stats_label_text()
         self.statsLabel.draw()
         if (self.visualize_puck_sensor or self.visualize_landmark_sensor or
@@ -557,8 +648,8 @@ class AlvinSim(pyglet.window.Window):
     def update_for_robot(self, dt, robot, manual_twist):
 
         # First do autonomous control
-        range_scan = robot.range_scanner.compute(self.env, robot, False)
-        landmark_scan = robot.landmark_scanner.compute(self.env, robot, False)
+        range_scan = robot.range_scanner.compute(self.env, robot)
+        landmark_scan = robot.landmark_scanner.compute(self.env, robot)
         #landmark_scan = robot.landmark_scanner.compute(self.env, robot, \
         #                                               self.landmarks, False)
         sensor_suite = SensorSuite(range_scan, landmark_scan)

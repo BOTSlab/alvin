@@ -17,11 +17,15 @@ class Landmark(object):
         self.mask = mask
         self.shape.filter = ShapeFilter(categories = mask)
         if mask == ARC_LANDMARK_MASK:
+            self.shape.color = 255, 0, 255
+        elif mask == ENTER_ARC_LANDMARK_MASK:
             self.shape.color = 0, 255, 0
+        elif mask == EXIT_ARC_LANDMARK_MASK:
+            self.shape.color = 255, 0, 0 
         elif mask == POLE_LANDMARK_MASK:
             self.shape.color = 0, 0, 255 
         elif mask == BLAST_LANDMARK_MASK:
-            self.shape.color = 255, 0, 0
+            self.shape.color = 255, 255, 255
         else:
             sys.exit("Unknown landmark mask: " + str(mask))
 
@@ -31,10 +35,10 @@ class Landmark(object):
             config.getfloat("RangeScan:landmarks", "range_max") \
             + radius
         self.vis_inside_radius = \
-            config.getfloat("LandmarkCircleController", "inside_radius") \
+            config.getfloat("OutlierBumpController", "inside_radius") \
             + radius
         self.vis_outside_radius = \
-            config.getfloat("LandmarkCircleController", "outside_radius") \
+            config.getfloat("OutlierBumpController", "outside_radius") \
             + radius
 
     def visualize_params(self):

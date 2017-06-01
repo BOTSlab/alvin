@@ -12,6 +12,9 @@ class Puck(object):
         # Hockey puck radius = 23mm = 0.023
         self.radius = 0.023 * M_TO_PIXELS
 
+        # Double hockey puck radius
+        #self.radius = 0.046 * M_TO_PIXELS
+
         # Plate puck radius = 12.8cm = 0.128
         #self.radius = 0.128 * M_TO_PIXELS
 

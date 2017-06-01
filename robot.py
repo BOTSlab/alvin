@@ -48,8 +48,6 @@ class Robot(object):
         for a in angles:
             vertices.append((r*cos(a), r*sin(a)))
 
-        vertices = vertices[::-1]
-
         self.shape = Poly(self.body, vertices)
         self.shape.color = 127, 0, 255  # a pinkish blue
         self.shape.filter = ShapeFilter(categories = ROBOT_MASK)

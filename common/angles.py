@@ -21,12 +21,25 @@ def normalize_angle_pm_pi(theta):
     return theta
 
 def get_smallest_angular_difference(a, b):
+    """ Return smallest distance between two angles.  Result always postive."""
     a = normalize_angle_pm_pi(a)
     b = normalize_angle_pm_pi(b)
     error = fabs(a - b)
     if error > pi:
         error = fabs(error - 2*pi)
     return error
+
+def get_smallest_signed_angular_difference(a, b):
+    """ Return angle between the two given angles with the smallest absolute
+        value.  Meanwhile, the value returned will have a sign. """
+    a = normalize_angle_pm_pi(a)
+    b = normalize_angle_pm_pi(b)
+    diff1 = a - b
+    diff2 = pi - a + (b + pi)
+    if fabs(diff1) < fabs(diff2):
+        return diff1
+    else:
+        return -diff2
 
 def get_angular_difference(a, b):
     a = normalize_angle_0_2pi(a)
