@@ -1,9 +1,14 @@
 from types import Twist
 from math import pi
 
-M_TO_PIXELS = 200
+#CM_TO_PIXELS = 2.4
 
-MAX_LINEAR_SPEED = 0.5 * M_TO_PIXELS
+CM_TO_PIXELS = 3.5
+
+# Modified just to fit on the small Macbook Air screen
+#CM_TO_PIXELS = 2.4
+
+MAX_LINEAR_SPEED = 100.0 * CM_TO_PIXELS
 MAX_ANGULAR_SPEED = 1.0 * 2 * pi
 
 # The types of objects as powers of two, used for filtering shapes

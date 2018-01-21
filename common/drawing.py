@@ -2,7 +2,7 @@ import pyglet
 from math import *
 from pyglet.gl import *
 
-def draw_line(robot, rscan, angle, color, length=10000, width=6):
+def draw_ray(robot, angle, color, length=10000, width=6):
     c = cos(robot.body.angle + angle)
     s = sin(robot.body.angle + angle)
     x1 = int(robot.body.position.x)

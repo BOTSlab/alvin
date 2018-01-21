@@ -1,11 +1,16 @@
-""" A variant on Gauci et al's controller from 'Clustering objects with robots that do not compute'. """
+""" Implementation of Gauci et al's controller which uses the old range scanner sensor. """
 
 from controller import Controller
 from math import fabs, pi
 from common import *
 from configsingleton import ConfigSingleton
 
-class GauciController(Controller):
+# Our mechanism for selectively importing pyglet/GUI-related stuff.
+import gui_setting
+if gui_setting.use:
+    from common.drawing import draw_ray, draw_segment_wrt_robot
+
+class GauciRangeController(Controller):
 
     def __init__(self, puck_mask):
         self.puck_mask = puck_mask
@@ -26,6 +31,7 @@ class GauciController(Controller):
         centre_angle = 0
 
         # EXPERIMENT TO ACHIEVE A MINIMUM SIZE AGGREGATE.
+        """
         lscan = sensor_suite.landmark_scan
         closest_lmark_distance = float('inf')
         for i in range(len(lscan.ranges)):
@@ -34,6 +40,7 @@ class GauciController(Controller):
                 closest_lmark_distance = lscan.ranges[i]
         if closest_lmark_distance < 200:
             centre_angle = 0.3
+        """
 
         # Relying on only a single forward-pointing ray causes distant pucks
         # to be easily missed (they may be detected, but too sporadically to
@@ -58,7 +65,7 @@ class GauciController(Controller):
             twist.linear = self.linear_speed
             twist.angular =  self.angular_speed
             if visualize:
-                self.draw_line(this_robot, scan, 0, (255, 0, 255))
+                draw_ray(this_robot, 0, (255, 0, 255))
 
         elif react_to_robot:
             # Turn left and slow
@@ -66,13 +73,13 @@ class GauciController(Controller):
             twist.angular = self.angular_speed
 
             if visualize: # Reacting to robot
-                self.draw_line(this_robot, scan, 0, (255, 0, 0))
+                draw_ray(this_robot, 0, (255, 0, 0))
         else:
             # Turn right
             twist.linear = self.linear_speed
             twist.angular = -self.angular_speed
 
             if visualize:
-                self.draw_line(this_robot, scan, 0, (0, 255, 0))
+                draw_ray(this_robot, 0, (0, 255, 0))
                 
         return twist

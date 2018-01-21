@@ -1,4 +1,11 @@
+.DS_Store
 *~
 \#*\#
 *.py[cod]
 roboticsintro.egg-info/
+old_cfg/
+old_code/
+old_controllers/
+old_data/
+old_l_shape/
+old_movies/

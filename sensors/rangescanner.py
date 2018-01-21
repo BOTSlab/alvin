@@ -86,7 +86,7 @@ class RangeScanner:
             inward_range = query_info.alpha * temp_scan.OUTER_RADIUS
 
             self.start_ranges.append(temp_scan.OUTER_RADIUS - inward_range
-                                    + 2 )
+                                    + 4 )
 
 
     def compute(self, env, robot):

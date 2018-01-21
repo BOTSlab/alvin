@@ -4,7 +4,11 @@ it does not move. """
 from pymunk import Body, moment_for_circle
 from math import cos, sin, atan2, pi
 from common import *
-from common.drawing import draw_line, draw_circle
+
+# Our mechanism for selectively importing pyglet/GUI-related stuff.
+import gui_setting
+if gui_setting.use:
+    from common.drawing import draw_ray, draw_circle
 
 class Probe(object):
     def __init__(self):
@@ -45,9 +49,9 @@ class Probe(object):
 
         if cl_angle != None and cl_dist > 0:
             if cl_mask == ARC_LANDMARK_MASK:
-                draw_line(self, lscan, cl_angle, (0, 255, 0), 20, 1)
+                draw_ray(self, cl_angle, (0, 255, 0), 20, 1)
             elif cl_mask == BLAST_LANDMARK_MASK:
-                draw_line(self, lscan, cl_angle+pi, (255, 0, 0), 20, 1)
+                draw_ray(self, cl_angle+pi, (255, 0, 0), 20, 1)
             elif (cl_mask == POLE_LANDMARK_MASK):
 
                 # We'll average all pole landmark responses.
@@ -59,4 +63,4 @@ class Probe(object):
                         vy += sin(lscan.angles[i])
                 combined_angle = atan2(vy, vx)
                 
-                draw_line(self, lscan, combined_angle, (0, 0, 255), 20, 1)
+                draw_ray(self, combined_angle, (0, 0, 255), 20, 1)
