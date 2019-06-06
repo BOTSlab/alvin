@@ -3,10 +3,10 @@ from math import pi
 
 #CM_TO_PIXELS = 2.4
 
-CM_TO_PIXELS = 3.5
+#CM_TO_PIXELS = 3.5
 
 # Modified just to fit on the small Macbook Air screen
-#CM_TO_PIXELS = 2.4
+CM_TO_PIXELS = 2.4
 
 MAX_LINEAR_SPEED = 100.0 * CM_TO_PIXELS
 MAX_ANGULAR_SPEED = 1.0 * 2 * pi

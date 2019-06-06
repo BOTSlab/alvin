@@ -139,9 +139,8 @@ increment = 1000
 png_output = False
 """
 
-"""
 dir_base = '.'
-dir_name = 'gauci'
+dir_name = 'default'
 var_name = ''
 var_value = ''
 n_trials = 1
@@ -149,18 +148,18 @@ start_step = 0
 number_steps = 10000
 increment = 500
 png_output = False
-"""
 
-#for i in range(n_trials):
-#    save_index = 0
-#    direc = '{}/{}/{}/{}/{}/'.format(dir_base, dir_name, var_name, var_value, i)
-#    for step in range(start_step, number_steps + 1, increment):
-#        do_plots(direc, step, png_output)
+for i in range(n_trials):
+    save_index = 0
+    direc = '{}/{}/{}/{}/{}/'.format(dir_base, dir_name, var_name, var_value, i)
+    for step in range(start_step, number_steps + 1, increment):
+        do_plots(direc, step, png_output)
 
 #
 # TRAJECTORIES
 #
 
+"""
 dir_base = '/Users/av/DATA/AAMAS18/'
 dir_name = 'C_SHAPE'
 var_name = 'one_robot'
@@ -169,6 +168,7 @@ trial = 0
 start_step = 0
 increment = 10
 number_steps = 50000
+"""
 
 """
 dir_base = '.'
@@ -181,6 +181,7 @@ number_steps = 20000
 increment = 100
 """
 
+"""
 direc = '{}/{}/{}/{}/{}/'.format(dir_base, dir_name, var_name, var_value, trial)
 
 fig = plt.figure()
@@ -195,4 +196,5 @@ for step in range(start_step, number_steps + 1, increment):
 # PDF output
 filename = '{}/trajectories_increment_{}.pdf'.format(direc, increment)
 fig.savefig(filename, bbox_inches='tight')
+"""
 plt.show()

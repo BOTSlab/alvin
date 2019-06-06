@@ -2,7 +2,7 @@ import pyglet, pymunk.pyglet_util
 import time
 from pyglet.window import key
 from pyglet.gl import *
-# from PIL import Image
+#from PIL import Image
 
 from robot import Robot
 from probe import Probe
@@ -17,7 +17,7 @@ class AlvinWindow(pyglet.window.Window):
     steps_between_toggles = 10
     visualize_puck_sensor = False
     visualize_landmark_sensor = False
-    visualize_controllers = False
+    visualize_controllers = True
     steps_since_toggle = 0
 
     def __init__(self, sim):
@@ -101,6 +101,7 @@ class AlvinWindow(pyglet.window.Window):
     def save_screenshot(self):
         # The file index will increase by one each time as that's more
         # convenient for later turning these images into a video.
+        """
         index = self.sim.steps / self.sim.capture_interval
         file_name = '{}/{:07d}.png'.format(self.sim.output_dir, index)
         print "Capturing screenshot to {}".format(file_name)
@@ -112,6 +113,8 @@ class AlvinWindow(pyglet.window.Window):
         pil_image = pil_image.transpose(Image.FLIP_TOP_BOTTOM)
         pil_image = pil_image.convert('RGB')
         pil_image.save(file_name, 'PNG')
+        """
+        pass
 
     # define how to draw the visualization
     def on_draw(self):

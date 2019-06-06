@@ -63,6 +63,8 @@ class BumpController(Controller):
                                            "wall_turn_on_spot")
         self.no_target_turn_on_spot = config.getboolean("BumpController",
                                            "no_target_turn_on_spot")
+        self.curve_gamma = config.getfloat("BumpController",
+                                           "curve_gamma")
 
         self.lmark_pair_dist = config.getint("AlvinSim", "lmark_pair_dist") + 10
 
@@ -157,67 +159,6 @@ class BumpController(Controller):
                         draw_segment_wrt_robot(robot, a, b,
                                            color=(127,127,127), width=3)
 
-#        MORE REALISITIC, BUT SLOWER
-#
-#        for i in range(image.n_rows):
-#            if image.masks[i] & ANY_LANDMARK_MASK != 0:
-#                (ixr, iyr) = image.calib_array[i,2], image.calib_array[i,3]
-#                it = image.calib_array[i,4]
-#                ir = image.calib_array[i,5]
-#
-#                for j in range(i+1,image.n_rows):
-#                    if image.masks[j] & ANY_LANDMARK_MASK != 0:
-#                        (jxr, jyr) = image.calib_array[j,2], image.calib_array[j,3]
-#                        jt = image.calib_array[j,4]
-#                        jr = image.calib_array[j,5]
-#
-#                        inter_lmark_dist = sqrt(ir**2 + jr**2 - 2*ir*jr*
-#                            cos(get_smallest_angular_difference(it, jt)))
-#                        # The (x, y) coordinates for each landmark, a and b.
-#                        # Note that we may switch the roles of a and b below.
-#                        a = (ir * cos(it), ir * sin(it))
-#                        b = (jr * cos(jt), jr * sin(jt))
-#
-#                        # Each landmark pair is ordered according to x.  The
-#                        # first (a) has a lower x-coordinate then the second (b)
-#                        if a[0] >= b[0]:
-#                            # Swap a and b.
-#                            tmp = a
-#                            a = b
-#                            b = tmp
-#
-#                        if (self.pair_condition == "SIMPLE"
-#                           and inter_lmark_dist < self.lmark_pair_dist):
-#                            lmark_pairs.append((a, b))
-#                            if visualize:
-#                                draw_segment_wrt_robot(robot, a, b,
-#                                                   color=(127,127,127), width=3)
-#
-#                        elif (self.pair_condition == "BACK_RIGHT"
-#                           and inter_lmark_dist < self.lmark_pair_dist
-#                           and a[1] < 0):
-#                            lmark_pairs.append((a, b))
-#                            if visualize:
-#                                draw_segment_wrt_robot(robot, a, b,
-#                                                   color=(127,127,127), width=3)
-#
-#                        elif (self.pair_condition == "FRONT_POSITIVE"
-#                           and inter_lmark_dist < self.lmark_pair_dist
-#                           and b[0] > 0):
-#                            lmark_pairs.append((a, b))
-#                            if visualize:
-#                                draw_segment_wrt_robot(robot, a, b,
-#                                                   color=(127,127,127), width=3)
-#
-#                        elif (self.pair_condition == "BOTH"
-#                           and inter_lmark_dist < self.lmark_pair_dist
-#                           and a[1] < 0   # The back landmark (a) should lie on
-#                           and b[0] > 0): # landmark (b) should have positive x.
-#                            lmark_pairs.append((a, b))
-#                            if visualize:
-#                                draw_segment_wrt_robot(robot, a, b,
-#                                                   color=(127,127,127), width=3)
-
         # Find the closest landmark pair to the robot.
         closest_pair_d = float('inf')
         self.closest_pair = None
@@ -236,7 +177,9 @@ class BumpController(Controller):
 
         # See if guidance should come from the closest single landmark.
         check_single_landmark = True
-        if (self.single_condition == "ONLY_IF_NO_PAIR"
+        if (self.single_condition == "NEVER"):
+            check_single_landmark = False
+        elif (self.single_condition == "ONLY_IF_NO_PAIR"
            and self.closest_pair == None):
             check_single_landmark = False
 
@@ -258,43 +201,6 @@ class BumpController(Controller):
                     self.closest_pair = None
                     self.guidance_vec = (r * cos(a), r * sin(a))
                     self.guidance_angle = a
-#            REALISTIC BUT SLOWER
-#            for i in range(image.n_rows):
-#                if image.masks[i] & ANY_LANDMARK_MASK != 0:
-#                    (xr, yr) = image.calib_array[i,2], image.calib_array[i,3]
-#                    a = image.calib_array[i,4]
-#                    r = image.calib_array[i,5]
-#
-#                    if ((self.single_condition == "SIMPLE" or self.single_condition == "ONLY_IF_NO_PAIR") and r < closest_pair_d):
-#                        closest_pair_d = r
-#                        self.closest_pair = None
-#                        self.guidance_vec = (r * cos(a), r * sin(a))
-#                        self.guidance_angle = a
-#
-#                    elif (self.single_condition == "ON_RIGHT"
-#                       and a < 0 # Require single to be on right.
-#                       and r < closest_pair_d):
-#                        closest_pair_d = r
-#                        self.closest_pair = None
-#                        self.guidance_vec = (r * cos(a), r * sin(a))
-#                        self.guidance_angle = a
-    
-        """
-        if self.closest_pair != None:
-            print "PAIR"
-        elif self.guidance_vec != None:
-            print "SINGLE"
-        else:
-            print "NO LANDMARK"
-        """
-
-        if visualize and self.guidance_vec != None:
-            if self.closest_pair == None:
-                draw_segment_wrt_robot(robot, (0,0), self.guidance_vec,
-                    color=(255,255,0), width=3)
-            else:
-                draw_segment_wrt_robot(robot, self.closest_pair[0],
-                    self.closest_pair[1], color=(255,255,255), width=3)
 
     def process_pucks(self, robot, sensor_dump, visualize=False):
         """ If self.target_pos is set (not None) then process the puck pixels
@@ -450,18 +356,19 @@ class BumpController(Controller):
                                   self.guidance_vec[1]**2)
 
         twist = Twist()
+        action_print = None
         if react_to_robot:
             # Turn slow in the open direction
             twist.linear = self.slow_factor * self.linear_speed
             twist.angular = self.angular_speed
+            action_print = "ROBOT"
             if visualize:
-                print "ROBOT"
                 draw_ray(robot, react_to_robot_angle, color=(255,0,0))
 
         elif react_to_wall:
+            action_print = "WALL"
             if visualize:
-                print "WALL"
-                draw_ray(robot, react_to_wall_angle, color=(255,255,0))
+                draw_ray(robot, react_to_wall_angle, color=(255,0,255))
             #twist = self.curve_to_angle(pi/2, react_to_wall_angle, self.wall_turn_on_spot)
             twist.linear = uniform(-0.1, 0.1) * self.linear_speed
             twist.angular = -self.angular_speed
@@ -469,8 +376,7 @@ class BumpController(Controller):
         elif self.guidance_vec == None:
             # No landmarks in view AND no walls in view.  Just go straight.
             twist.linear = self.linear_speed
-            if visualize:
-                print "STRAIGHT (NO LANDMARKS OR WALLS IN VIEW)"
+            action_print = "STRAIGHT (NO LANDMARKS OR WALLS IN VIEW)"
 
         elif self.target_pos != None and dist_to_lmarks > self.puck_dist_threshold:
             ##twist.linear = self.linear_speed * sign(self.target_pos[0])
@@ -484,26 +390,35 @@ class BumpController(Controller):
             twist.linear = self.linear_speed * cos(angle)
             twist.angular = self.angular_speed * sin(angle)
 
+            action_print = "TARGETING"
             if visualize:
-                print "TARGETING"
                 draw_segment_wrt_robot(robot, (0, 0), 
                                        (self.target_pos[0], self.target_pos[1]),
                                        color=(255, 255, 255), width=3)
         else:
 
+            # FIRST METHOD: NO CONTROL OVER DISTANCE
             #twist = self.curve_to_angle(-pi/2, self.guidance_angle, self.no_target_turn_on_spot)
-            dist = sqrt(self.guidance_vec[0]**2 + self.guidance_vec[1]**2)
-            gamma = 0.25
-            twist = self.curve_to_angle(-pi/2 + gamma, self.guidance_angle, self.no_target_turn_on_spot)
-            if dist < self.lmark_ideal_range:
-                twist = self.curve_to_angle(-pi/2 - gamma, self.guidance_angle, self.no_target_turn_on_spot)
-                if visualize:
-                    print "CURVING OUT"
-            else:
-                twist = self.curve_to_angle(-pi/2 + gamma, self.guidance_angle, self.no_target_turn_on_spot)
-                if visualize:
-                    print "CURVING IN"
+
+            # SECOND METHOD: BANG-BANG CONTROL OVER DISTANCE BY CURVING IN OR OUT
+            # BY A FIXED ANGLE 
             """
+            dist = sqrt(self.guidance_vec[0]**2 + self.guidance_vec[1]**2)
+            gamma = self.curve_gamma
+            twist = self.curve_to_angle(-pi/2 + gamma, self.guidance_angle)
+            if dist < self.lmark_ideal_range:
+                twist = self.curve_to_angle(-pi/2 - gamma, self.guidance_angle)
+                action_print = "CURVING OUT"
+                if visualize:
+                    draw_ray(robot, gamma, color=(255,0,0))
+
+            else:
+                twist = self.curve_to_angle(-pi/2 + gamma, self.guidance_angle)
+                action_print = "CURVING IN"
+                if visualize:
+                    draw_ray(robot, -gamma, color=(0,255,0))                    
+            """
+
             dist = dist_to_lmarks
             ideal_dist = self.lmark_ideal_range
             # We want to use proportional control to keep the robot at
@@ -517,7 +432,6 @@ class BumpController(Controller):
             # One consequence of using this error signal is that the response
             # at a distance greater than 2*ideal_dist is the same as at
             # 2*ideal_dist.
-            print dist_error
 
             # But we also have to consider the current angle w.r.t. the
             # guidance angle.  Ideally, the guidance angle should be at -pi/2
@@ -528,40 +442,66 @@ class BumpController(Controller):
             # the range [0, -pi/2].  We will use dist_error to scale linearly
             # within these ranges as we compute the ideal guidance angle.
             pi_2 = pi / 2.0
-            if dist_error > 0:
-                ideal_guidance_angle = -pi_2 - pi_2 * dist_error
-            else:
-                ideal_guidance_angle =  pi_2 * dist_error
+            ideal_guidance_angle = -pi_2 - pi_2 * dist_error
+            action_print = "PROPORTIONAL CONTROL"
 
             # Now define the angle_error
-            #angle_error = ideal_guidance_angle - self.guidance_angle
             angle_error = get_smallest_signed_angular_difference(
                                                         self.guidance_angle,
                                                         ideal_guidance_angle)
 
-            twist.linear = self.linear_speed * cos(angle_error)
-            twist.angular = self.angular_speed * sin(angle_error)
-            #twist.angular = self.angular_speed * (2/(1+exp(-angle_error)) - 1)
-            """
+            twist = self.diff_to_twist_bang_bang(angle_error)
+
+        landmark_print = None
+        if self.closest_pair != None:
+            landmark_print = "PAIR"
+            if visualize:
+                draw_segment_wrt_robot(robot, self.closest_pair[0],
+                    self.closest_pair[1], color=(255,255,255), width=3)
+                draw_segment_wrt_robot(robot, (0,0), self.guidance_vec,
+                    color=(0,255,255), width=3)
+        elif self.guidance_vec != None:
+            landmark_print = "SINGLE"
+            if visualize:
+                draw_segment_wrt_robot(robot, (0,0), self.guidance_vec,
+                    color=(255,255,0), width=3)
+        else:
+            landmark_print = "NO LANDMARK"
+
+        if visualize:
+            print "{}: {}".format(landmark_print, action_print)
 
         return twist
 
-    def curve_to_angle(self, desired_angle, actual_angle, turn_on_spot):
+    def curve_to_angle(self, desired_angle, actual_angle):
+        diff = get_smallest_signed_angular_difference(actual_angle, desired_angle)
+        return self.diff_to_twist_bang_bang(diff)
+
+    def diff_to_twist_bang_bang(self, diff):
+        """ Given an angular difference, compute a twist to reduce it."""
         twist = Twist()
-
-        diff = get_smallest_signed_angular_difference(desired_angle,
-                                                      actual_angle)
         if diff > 0:
-            twist.angular = - self.angular_speed
-        else:
             twist.angular = self.angular_speed
+        else:
+            twist.angular = -self.angular_speed
 
-        if turn_on_spot:
-            if fabs(diff) < pi/10.0:
+        if self.no_target_turn_on_spot:
+            if fabs(diff) < pi/20.0:
                 twist.linear = self.linear_speed
+            else:
+                twist.linear = 0
         else:
             twist.linear = self.linear_speed
 
+        return twist
+
+    def diff_to_twist_smooth(self, diff):
+        """ Given an angular difference, compute a twist to reduce it."""
+        """ WORKS AND IS SIMPLE, BUT REQUIRES A HIGH ANGULAR SPEED THAT
+        THE REAL ROBOT CANNOT ACHIEVE """
+        twist = Twist()
+        twist.linear = self.linear_speed * cos(diff)
+        twist.angular = self.angular_speed * sin(diff)
         return twist
 
     def cap_twist(self, twist):
