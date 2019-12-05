@@ -61,6 +61,7 @@ class GauciRangeController(Controller):
 
         # Now react...
         if react_to_puck:
+            print "PUCK"
             # Turn left
             twist.linear = self.linear_speed
             twist.angular =  self.angular_speed
@@ -68,6 +69,7 @@ class GauciRangeController(Controller):
                 draw_ray(this_robot, 0, (255, 0, 255))
 
         elif react_to_robot:
+            print "ROBOT"
             # Turn left and slow
             twist.linear = self.linear_speed * self.slow_factor
             twist.angular = self.angular_speed
@@ -75,6 +77,7 @@ class GauciRangeController(Controller):
             if visualize: # Reacting to robot
                 draw_ray(this_robot, 0, (255, 0, 0))
         else:
+            print "NO PUCK/ROBOT -RIGHT"
             # Turn right
             twist.linear = self.linear_speed
             twist.angular = -self.angular_speed

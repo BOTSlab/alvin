@@ -22,11 +22,11 @@ class AlvinWindow(pyglet.window.Window):
 
     def __init__(self, sim):
 
-        super(AlvinWindow, self).__init__(sim.width, sim.height, visible=False)
+        super(AlvinWindow, self).__init__(sim.width, sim.height, visible=False,vsync=False)
 
         self.sim = sim
 
-        self.start_time = time.clock()
+        self.start_time = time.time()
 
         #self.set_caption(config_file)
 
@@ -58,22 +58,19 @@ class AlvinWindow(pyglet.window.Window):
         self.mouse_body = pymunk.Body(body_type = pymunk.Body.KINEMATIC)
 
         # Schedule the key callbacks
-        for robot in sim.robots:
-            pyglet.clock.schedule_interval(robot.control_step, 1.0/120)
-        pyglet.clock.schedule_interval(sim.update, 1.0/60)
-        pyglet.clock.schedule_interval(sim.env.step, 1.0/60)
-        pyglet.clock.schedule_interval(self.handle_keys, 1.0/60)
+#        frame_rate = 1/120.0
+#        pyglet.clock.schedule_interval(sim.update, frame_rate)
+#        pyglet.clock.schedule_interval(self.handle_keys, frame_rate)
 
         self.set_visible(True)
 
-    def unschedule(self):
-        for robot in self.sim.robots:
-            pyglet.clock.unschedule(robot.control_step)
-        pyglet.clock.unschedule(self.sim.update)
-        pyglet.clock.unschedule(self.sim.env.step)
+        self.last_on_draw_time = None
+
+#    def unschedule(self):
+#        pyglet.clock.unschedule(self.sim.update)
 
     def set_stats_label_text(self):
-#        secs = int(time.clock() - self.start_time)
+#        secs = int(time.time() - self.start_time)
 #        hours = secs / 3600
 #        secs -= hours * 3600
 #        mins = secs / 60
@@ -86,7 +83,7 @@ class AlvinWindow(pyglet.window.Window):
         sensor_dump = robot.sensor_suite.compute(self.sim.env, robot, landmarks)
 
         #robot.sensor_suite.visualize(sensor_dump, robot, self.visualize_puck_sensor, self.visualize_landmark_sensor)
-        robot.sensor_suite.visualize(sensor_dump, self.sim.env, robot, self.sim.landmarks, self.visualize_puck_sensor, self.visualize_landmark_sensor)
+        robot.sensor_suite.visualize(sensor_dump, self.sim.env, robot, self.visualize_puck_sensor, self.visualize_landmark_sensor, self.sim.landmarks)
 
         # Call the controller's react method, although we will actually
         # ignore the resulting twist here.
@@ -118,6 +115,16 @@ class AlvinWindow(pyglet.window.Window):
 
     # define how to draw the visualization
     def on_draw(self):
+        print "on_draw: step: {}".format(self.sim.steps)
+
+        if self.last_on_draw_time != None:
+            print "frame rate: {}".format(1/(time.time() - self.last_on_draw_time))
+        self.last_on_draw_time = time.time()
+
+
+#        if self.sim.steps % 100 != 0:
+#            return
+        
         # always clear and redraw for graphics programming
         self.clear()
         self.sim.env.debug_draw(self.draw_options)
@@ -151,6 +158,8 @@ class AlvinWindow(pyglet.window.Window):
             self.unschedule()
             self.close()
             pyglet.app.exit()
+
+        self.flip()
         
     def on_mouse_press(self, x, y, button, modifiers):
         self.mouse_body.position = x,y
@@ -236,4 +245,11 @@ class AlvinWindow(pyglet.window.Window):
                                                     (0,0))
 
     def run(self):
-        pyglet.app.run()
+        #pyglet.app.run()
+
+        while not self.has_exit:
+            self.dispatch_events()
+            self.handle_keys(0)
+            self.on_draw()
+            self.sim.update(0)
+#        pyglet.clock.schedule_interval(self.handle_keys, frame_rate)

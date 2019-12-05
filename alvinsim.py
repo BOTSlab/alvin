@@ -102,7 +102,7 @@ class AlvinSim(object):
         # Setup to handle collisions
         #self.env.add_default_collision_handler().begin = self.collision_handler
 
-        #self.avg_dt = None
+        self.avg_dt = None
 
     def create_rect_border(self):
         env_b = self.env.static_body
@@ -365,23 +365,29 @@ class AlvinSim(object):
     #    self.collisions += 1
     #    return True
 
-    def update(self, dt):
-        #if self.avg_dt == None:
-        #    self.avg_dt = dt
-        #else:
-        #    self.avg_dt += dt
-        #    if self.steps % 100 == 0:
-        #        print "avg update dt: {}".format(self.avg_dt / (self.steps + 1))
+    def update(self, real_time_since_last_update):
+        """
+        if self.avg_dt == None:
+            self.avg_dt = dt
+        else:
+            self.avg_dt += dt
+            if self.steps % 10 == 0:
+                print "avg update dt: {}".format(self.avg_dt / (self.steps + 1))
+        """
 
         for robot in self.robots:
-            self.update_for_robot(dt, robot)
+            self.update_for_robot(robot)
+            robot.control_step()
+            
+        dt = 0.25
+        sim.env.step(dt)
 
         if self.analyze and self.steps % self.capture_interval == 0:
             self.analyzer.analyze(self.steps, self.pucks, self.robots)
 
         self.steps += 1
 
-    def update_for_robot(self, dt, robot):
+    def update_for_robot(self, robot):
 
         # First do autonomous control
         #sensor_dump = robot.sensor_suite.compute(self.env, robot)
@@ -427,16 +433,10 @@ if __name__ == '__main__':
         win = AlvinWindow(sim)
         win.run()
     else:
-        # Determined as a similar dt to when the gui is running.
-        robot_dt = 0.044
-        update_dt = 0.044
         #start_time = time.clock()
         while sim.steps <= sim.number_steps:
 
-            for robot in sim.robots:
-                robot.control_step(robot_dt)
-            sim.update(update_dt)
-            sim.env.step(update_dt)
+            sim.update(0)
 
             #if sim.steps % 10 == 0:
             #    elapsed = (time.clock() - start_time) / 10

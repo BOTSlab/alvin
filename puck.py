@@ -18,10 +18,10 @@ class Puck(object):
 
         if puck_shape == "CIRCLE":
             # Hockey puck radius = 23mm = 0.023
-            self.radius = 2.3 * CM_TO_PIXELS
+            #self.radius = 2.3 * CM_TO_PIXELS
 
             # Double hockey puck radius
-            #self.radius = 4.6 * CM_TO_PIXELS
+            self.radius = 4.6 * CM_TO_PIXELS
 
             # Arbitrary radius
             #self.radius = 0.07 * M_TO_PIXELS

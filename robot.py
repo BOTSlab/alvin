@@ -23,12 +23,12 @@ class Robot(object):
         else:
             r = self.radius
             d = self.radius * 1.5 # Amount the wedge part pokes out.
-            #vertices = [(0, -r),
-            #            (d, 0),
-            #            (0, r)]
             vertices = [(0, -r),
-                        (d/4, 0),
-                        (d/2, r)]
+                        (d, 0),
+                        (0, r)]
+            #vertices = [(0, -r),
+            #            (d/4, 0),
+            #            (d/2, r)]
             # Now add the semicircular back part
             n = 5
             angles = [pi/2 + i*(pi/n) for i in range(1, n)]
@@ -38,6 +38,14 @@ class Robot(object):
             rob_I = moment_for_poly(self.mass, vertices)
             self.body = Body(self.mass, rob_I)
             self.shape = Poly(self.body, vertices)
+
+            # EXPERIMENTAL: Add bristles to robot
+#            rest_length = 100
+#            stiffness = 500
+#            damping = 10
+#            self.bristle_body = pymunk.DampedSpring(self.body, body, \
+#                                  (0,0), (0,0), rest_length, stiffness, damping)
+#                self.sim.env.add(self.spring_body)
 
         self.body.position = 0, 0
         self.body.angle = 0
@@ -51,26 +59,10 @@ class Robot(object):
         #self.avg_dt = None
         #self.steps = 0
 
-    def control_step(self, dt):
-        """Execute one control step for robot.
-
-        control_step should be called regularly and at high frequency
-        to ensure propper execution.
-
-        :param dt: time since last control step execution
-        :type dt: float
-        """
-        #if self.avg_dt == None:
-        #    self.avg_dt = dt
-        #else:
-        #    self.avg_dt += dt
-        #    if self.steps % 100 == 0:
-        #        print "control_step dt: {}".format(self.avg_dt / (self.steps + 1))
-        #self.steps += 1
-
+    def control_step(self):
+        """Execute one control step for robot."""
 
         self.body.angular_velocity = self.command.angular
-
         self.body.apply_impulse_at_local_point((self.command.linear, 0), (0,0))
 
     def set_command(self, twist):
