@@ -8,8 +8,8 @@ from configsingleton import ConfigSingleton
 
 def execute(cmd):
     # Print the command to execute in green
-    print(Fore.GREEN + cmd)
-    print(Style.RESET_ALL)
+    print((Fore.GREEN + cmd))
+    print((Style.RESET_ALL))
 
     os.system(cmd)
 
@@ -30,7 +30,7 @@ for shape_name in shape_list:
     try:
         os.makedirs(output_dir)
     except OSError:
-        print "{} already exists".format(output_dir)
+        print("{} already exists".format(output_dir))
 
     filename = output_dir + config_filename
 
@@ -42,7 +42,7 @@ for shape_name in shape_list:
         execute("./alvinsim.py {} {}".format(filename, trial))
         elapsed_time = time() - start_time
 
-        print "trial time (secs): {}".format(elapsed_time)
+        print("trial time (secs): {}".format(elapsed_time))
         remaining_time = (stop_trial + 1 - trial) * elapsed_time
-        print "estimated remaining time (mins): {}".format(remaining_time/60)
+        print("estimated remaining time (mins): {}".format(remaining_time/60))
 

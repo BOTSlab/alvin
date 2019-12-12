@@ -1,6 +1,6 @@
 """ A fork of BumpController that REMOVES odometry-based homing to bump pucks towards the closest pair (or solitary) landmark. """
 
-from controller import Controller
+from .controller import Controller
 from math import atan2, exp, fabs, cos, sin, pi, sqrt, acos
 from numpy import sign
 from random import uniform
@@ -104,6 +104,7 @@ class BumpController(Controller):
         lmark_pairs = []
         lmark_scan = sensor_dump.landmarks
         nLmarks = len(lmark_scan.landmarks)
+        print("nLmarks: {}".format(nLmarks))
         for i in range(nLmarks):
             it = lmark_scan.landmarks[i].angle
             ir = lmark_scan.landmarks[i].distance
@@ -469,7 +470,7 @@ class BumpController(Controller):
             landmark_print = "NO LANDMARK"
 
         if visualize:
-            print "{}: {}".format(landmark_print, action_print)
+            print("{}: {}".format(landmark_print, action_print))
 
         return twist
 

@@ -1,6 +1,6 @@
 """ A fork of LineBumpController that uses odometry-based homing to bump pucks towards the closest pair (or solitary) landmark. """
 
-from controller import Controller
+from .controller import Controller
 from math import atan2, fabs, cos, sin, pi, sqrt, acos
 from numpy import sign
 from random import random, gauss

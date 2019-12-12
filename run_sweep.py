@@ -8,8 +8,8 @@ from configsingleton import ConfigSingleton
 
 def execute(cmd):
     # Print the command to execute in green
-    print(Fore.GREEN + cmd)
-    print(Style.RESET_ALL)
+    print((Fore.GREEN + cmd))
+    print((Style.RESET_ALL))
 
     os.system(cmd)
 
@@ -63,7 +63,7 @@ shape_list = ["PAIR"]
 for var in var_list: 
     for trial in range(start_trial, stop_trial+1):
         total_trials += 1
-print "total trials to execute: {}".format(total_trials)
+print("total trials to execute: {}".format(total_trials))
 
 trial_count = 0
 for shape_name in shape_list:
@@ -74,7 +74,7 @@ for shape_name in shape_list:
     try:
         os.makedirs(output_dir)
     except OSError:
-        print "{} already exists".format(output_dir)
+        print("{} already exists".format(output_dir))
 
     for var in var_list: 
         config.set(config_section, var_name, var)
@@ -91,7 +91,7 @@ for shape_name in shape_list:
             elapsed_time = time() - start_time
             trial_count += 1
 
-            print "trial time (secs): {}".format(elapsed_time)
+            print("trial time (secs): {}".format(elapsed_time))
             remaining_time = (total_trials - trial_count) * elapsed_time
-            print "estimated remaining time (mins): {}".format(remaining_time/60)
+            print("estimated remaining time (mins): {}".format(remaining_time/60))
 

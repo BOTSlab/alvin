@@ -63,6 +63,7 @@ class AlvinWindow(pyglet.window.Window):
 #        pyglet.clock.schedule_interval(self.handle_keys, frame_rate)
 
         self.set_visible(True)
+        self.activate()
 
         self.last_on_draw_time = None
 
@@ -115,15 +116,14 @@ class AlvinWindow(pyglet.window.Window):
 
     # define how to draw the visualization
     def on_draw(self):
-        print "on_draw: step: {}".format(self.sim.steps)
+        #print("on_draw: step: {}".format(self.sim.steps))
 
-        if self.last_on_draw_time != None:
-            print "frame rate: {}".format(1/(time.time() - self.last_on_draw_time))
+        #if self.last_on_draw_time != None:
+        #    print("frame rate: {}".format(1/(time.time() - self.last_on_draw_time)))
         self.last_on_draw_time = time.time()
 
-
-#        if self.sim.steps % 100 != 0:
-#            return
+        if self.sim.steps % self.sim.render_skip != 0:
+            return
         
         # always clear and redraw for graphics programming
         self.clear()
@@ -203,6 +203,17 @@ class AlvinWindow(pyglet.window.Window):
             manual_twist.linear = 0.25 * MAX_LINEAR_SPEED
         if self.keyboard[key.DOWN]:
             manual_twist.linear = -0.25 * MAX_LINEAR_SPEED
+
+        rs = self.sim.render_skip
+        if self.keyboard[key.BRACKETRIGHT]:
+            self.sim.render_skip += 5
+            print("render_skip: {}".format(self.sim.render_skip))
+        if self.keyboard[key.BRACKETLEFT]:
+            if rs > 1 and rs <= 10:
+                self.sim.render_skip -= 1
+            elif rs > 10:
+                self.sim.render_skip -= 10
+            print("render_skip: {}".format(self.sim.render_skip))
 
         # Handle the keyboard events which shouldn't be toggled too quickly.
         if self.keyboard[key.P] and \

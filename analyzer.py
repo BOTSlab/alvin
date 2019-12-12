@@ -12,19 +12,19 @@ class Analyzer(object):
 
         # Open data files and place a comment in the first line of each
         self.avg_puck_segment_dist_file = open(
-                '{}/avg_puck_segment_dist.dat'.format(output_dir), 'wa')
+                '{}/avg_puck_segment_dist.dat'.format(output_dir), 'a')
         self.avg_puck_segment_dist_file.write('# STEP, AVG_PUCK_SEGMENT_DIST\n')
 
-        self.pucks_file = open('{}/pucks.dat'.format(output_dir), 'wa')
+        self.pucks_file = open('{}/pucks.dat'.format(output_dir), 'a')
         self.pucks_file.write('# STEP, (X, Y) COORDINATES FOR ALL PUCKS\n')
 
-        self.robots_file = open('{}/robots.dat'.format(output_dir), 'wa')
+        self.robots_file = open('{}/robots.dat'.format(output_dir), 'a')
         self.robots_file.write(
                         '# STEP, (X, Y, THETA) COORDINATES FOR ALL ROBOTS\n')
 
         # For the landmarks file, we will go ahead and enter it here.
         if len(landmarks) > 0:
-            landmarks_file = open('{}/landmarks.dat'.format(output_dir), 'wa')
+            landmarks_file = open('{}/landmarks.dat'.format(output_dir), 'a')
             landmarks_file.write('# (X, Y) COORDINATES FOR ALL LANDMARKS\n')
             for i in range(len(landmarks)-1):
                 pos = landmarks[i].body.position

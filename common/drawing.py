@@ -27,8 +27,9 @@ def draw_segment_wrt_robot(robot, a, b, color=(255,255,255), width=3):
     pyglet.gl.glLineWidth(1)
 
 
-def draw_circle((cx, cy), radius, color):
+def draw_circle(xxx_todo_changeme, radius, color):
     # Arbitrarily set for now
+    (cx, cy) = xxx_todo_changeme
     numPoints = 50
 
     glColor3f(color[0], color[1], color[2])

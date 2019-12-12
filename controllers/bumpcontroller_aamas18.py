@@ -1,6 +1,6 @@
 """ A fork of BumpController that REMOVES odometry-based homing to bump pucks towards the closest pair (or solitary) landmark. """
 
-from controller import Controller
+from .controller import Controller
 from math import atan2, fabs, cos, sin, pi, sqrt, acos
 from numpy import sign
 from random import uniform
@@ -450,12 +450,12 @@ class BumpController(Controller):
             twist.linear = self.slow_factor * self.linear_speed
             twist.angular = self.angular_speed
             if visualize:
-                print "ROBOT"
+                print("ROBOT")
                 draw_ray(robot, react_to_robot_angle, color=(255,0,0))
 
         elif react_to_wall:
             if visualize:
-                print "WALL"
+                print("WALL")
                 draw_ray(robot, react_to_wall_angle, color=(255,255,0))
             #twist = self.curve_to_angle(pi/2, react_to_wall_angle, self.wall_turn_on_spot)
             twist.linear = uniform(-0.1, 0.1) * self.linear_speed
@@ -465,13 +465,13 @@ class BumpController(Controller):
             # No landmarks in view AND no walls in view.  Just go straight.
             twist.linear = self.linear_speed
             if visualize:
-                print "STRAIGHT (NO LANDMARKS OR WALLS IN VIEW)"
+                print("STRAIGHT (NO LANDMARKS OR WALLS IN VIEW)")
 
         elif self.target_pos != None:
             twist.linear = self.linear_speed * sign(self.target_pos[0])
             twist.angular = self.angular_speed * sign(self.target_pos[1])
             if visualize:
-                print "TARGETING"
+                print("TARGETING")
                 draw_segment_wrt_robot(robot, (0, 0), 
                                        (self.target_pos[0], self.target_pos[1]),
                                        color=(255, 255, 255), width=3)
@@ -482,11 +482,11 @@ class BumpController(Controller):
             if dist < self.lmark_ideal_range:
                 twist = self.curve_to_angle(-pi/2 - 0.25, self.guidance_angle, self.no_target_turn_on_spot)
                 if visualize:
-                    print "CURVING OUT"
+                    print("CURVING OUT")
             else:
                 twist = self.curve_to_angle(-pi/2 + 0.25, self.guidance_angle, self.no_target_turn_on_spot)
                 if visualize:
-                    print "CURVING IN"
+                    print("CURVING IN")
 
         return twist
 

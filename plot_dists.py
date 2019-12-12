@@ -29,7 +29,7 @@ def plot_average(filename_list, legend):
     for filename in filename_list:
         with open(filename) as f:
             data = f.read()
-        print filename
+        print(filename)
 
         data = data.split('\n')
         del data[0] # Remove first comment line
@@ -38,12 +38,12 @@ def plot_average(filename_list, legend):
         if sums == None:
             first_col = [row.split(',')[0] for row in data]
             second_col = [row.split(',')[1] for row in data]
-            steps = map(float, first_col)
-            sums = map(float, second_col)
+            steps = list(map(float, first_col))
+            sums = list(map(float, second_col))
         else:
             second_col = [row.split(',')[1] for row in data]
-            second_col_float = map(float, second_col)
-            sums = map(add, sums, second_col_float)
+            second_col_float = list(map(float, second_col))
+            sums = list(map(add, sums, second_col_float))
             
     n = len(filename_list)
     avgs = [s/n for s in sums]

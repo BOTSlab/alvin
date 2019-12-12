@@ -9,20 +9,20 @@ def internal_rand_normal():
     return sqrt(-2 * log(random())) * cos(2 * pi * random()) / 2
 
 n = 100000
-print "Using internal_rand_normal():"
+print("Using internal_rand_normal():")
 i_vals = []
 for i in range(n):
     v = internal_rand_normal()
     i_vals.append(v)
 
 i_array = np.array(i_vals)
-print "mean: {}, std: {}".format(np.mean(i_array), np.std(i_array))
+print("mean: {}, std: {}".format(np.mean(i_array), np.std(i_array)))
 
-print "Using gauss(0, 1):"
+print("Using gauss(0, 1):")
 g_vals = []
 for i in range(n):
     g = gauss(0, 1)
     g_vals.append(g)
 
 g_array = np.array(g_vals)
-print "mean: {}, std: {}".format(np.mean(g_array), np.std(g_array))
+print("mean: {}, std: {}".format(np.mean(g_array), np.std(g_array)))

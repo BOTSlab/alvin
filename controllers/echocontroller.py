@@ -1,7 +1,7 @@
 """ Controller which just prints the robots position and orientation. """
 
 import pyglet
-from controller import Controller
+from controllers.controller import Controller
 from common import Twist
 
 class EchoController(Controller):

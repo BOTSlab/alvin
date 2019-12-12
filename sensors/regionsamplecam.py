@@ -155,7 +155,7 @@ class RegionSampleCam:
             elif image.masks[i] == BLUE_PUCK_MASK:
                 color = (255, 255, 0)
             else:
-                print "Unknown mask: {}".format(image.masks[i])
+                print("Unknown mask: {}".format(image.masks[i]))
             pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,
                 ('v2f', (xw, yw)), ('c3B', color))
 

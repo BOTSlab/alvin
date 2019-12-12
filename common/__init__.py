@@ -1,4 +1,4 @@
-from types import Twist
+from .types import Twist
 from math import pi
 
 #CM_TO_PIXELS = 2.4

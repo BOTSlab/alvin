@@ -2,9 +2,9 @@
 restrict themselves to calling 'get_instance' then it works as a Singleton in
 essence.  Provides universal access to a single ConfigParser which reads from a config file upon the first call to 'get_instance'. """
 
-import ConfigParser, sys
+import configparser, sys
 
-class ConfigSingleton(ConfigParser.ConfigParser, object):
+class ConfigSingleton(configparser.ConfigParser, object):
 
     instance = None
 
@@ -17,8 +17,8 @@ class ConfigSingleton(ConfigParser.ConfigParser, object):
     def get_instance(config_file=None):
 
         if ConfigSingleton.instance == None and config_file == None:
-            print "ConfigSingleton: First caller of 'get_instance' must \
-                   supply a config file."
+            print("ConfigSingleton: First caller of 'get_instance' must \
+                   supply a config file.")
             sys.exit(-1)
         elif ConfigSingleton.instance == None and config_file != None:
             ConfigSingleton.instance = ConfigSingleton(config_file)

@@ -88,5 +88,5 @@ if __name__ == "__main__":
   v = (10,10)
   w = (20,20)
   assert distance_point_segment(p, v, w, False) == math.sqrt(100 + 100)
-  print "Done."
+  print("Done.")
   

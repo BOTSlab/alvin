@@ -17,7 +17,10 @@ from robot import Robot
 from probe import Probe
 from common import *
 from sensors import RangeScan, RangeScanner, SensorSuite, SensorDump
-from controllers import *
+from controllers.echocontroller import EchoController
+from controllers.gaucirangecontroller import GauciRangeController
+from controllers.bumpcontroller import BumpController
+from controllers.simplebumpcontroller import SimpleBumpController
 from configsingleton import ConfigSingleton
 from analyzer import Analyzer
 
@@ -33,7 +36,7 @@ class AlvinSim(object):
         # Use the base of the config file's name as the name of the output dir
         output_dir_base = str.split(config_file, '.')[0]
         self.output_dir = output_dir_base + '/' + str(trial_number)
-        print self.output_dir
+        print(self.output_dir)
 
         config = ConfigSingleton.get_instance(config_file)
 
@@ -54,13 +57,14 @@ class AlvinSim(object):
                                                "canned_landmarks_name")
         self.puck_shape = config.get("AlvinSim", "puck_shape")
         self.lmark_pair_dist = config.getint("AlvinSim", "lmark_pair_dist")
-        self.puck_kinds = range(self.number_puck_kinds)
+        self.puck_kinds = list(range(self.number_puck_kinds))
         self.wall_thickness = config.getint("AlvinSim", "wall_thickness")
         self.capture_interval = config.getint("AlvinSim", "capture_interval")
         self.analyze = config.getboolean("AlvinSim", "analyze")
         self.capture_screenshots = config.getboolean("AlvinSim", "capture_screenshots")
         self.visualize_probes = config.getboolean("AlvinSim", "visualize_probes")
         self.controller_name = config.get("AlvinSim", "controller_name")
+        self.render_skip = config.getint("AlvinSim", "render_skip")
 
         # build simulation environment
         self.env = pymunk.Space()
@@ -207,14 +211,16 @@ class AlvinSim(object):
             # Create the controller
             if self.controller_name == "EchoController":
                 robot.controller = EchoController()
-            elif self.controller_name == "GauciImageController":
-                robot.controller = GauciImageController(puck_mask)
+#            elif self.controller_name == "GauciImageController":
+#                robot.controller = GauciImageController(puck_mask)
             elif self.controller_name == "GauciRangeController":
                 robot.controller = GauciRangeController(puck_mask)
-            elif self.controller_name == "OdoBumpController":
-                robot.controller = OdoBumpController(robot, puck_mask)
+#            elif self.controller_name == "OdoBumpController":
+#                robot.controller = OdoBumpController(robot, puck_mask)
             elif self.controller_name == "BumpController":
                 robot.controller = BumpController(robot, puck_mask)
+            elif self.controller_name == "SimpleBumpController":
+                robot.controller = SimpleBumpController(robot, puck_mask)
             #elif self.controller_name == "TestOdometerController":
             #    robot.controller = TestOdometerController()
 
@@ -365,6 +371,13 @@ class AlvinSim(object):
     #    self.collisions += 1
     #    return True
 
+    def create_scalar_field(self, pos, mask):
+        landmark = Landmark(mask)
+        landmark.body.position = pos
+        self.env.add(landmark.body, landmark.shape)
+        self.landmarks.append(landmark)
+        return landmark
+
     def update(self, real_time_since_last_update):
         """
         if self.avg_dt == None:
@@ -392,7 +405,7 @@ class AlvinSim(object):
         # First do autonomous control
         #sensor_dump = robot.sensor_suite.compute(self.env, robot)
         sensor_dump = robot.sensor_suite.compute(self.env, robot, self.landmarks)
-        twist = robot.controller.react(robot, sensor_dump, False)
+        twist = robot.controller.react(robot, sensor_dump, True)
 
         if not self.allow_translation:
             twist.linear = 0
@@ -424,7 +437,7 @@ if __name__ == '__main__':
         config_file = sys.argv[1]
         trial_number = int(sys.argv[2])
     else:
-        print "usage:\n\talvinsim [config_file] [trial_number]"
+        print("usage:\n\talvinsim [config_file] [trial_number]")
         sys.exit(-1)
 
     sim = AlvinSim(config_file, trial_number)
@@ -446,4 +459,4 @@ if __name__ == '__main__':
             # Progress indicator
             if sim.steps % (sim.number_steps/10) == 0:
                 percentComplete = (100.0 * sim.steps) / sim.number_steps
-                print '{}%, '.format(percentComplete)
+                print('{}%, '.format(percentComplete))

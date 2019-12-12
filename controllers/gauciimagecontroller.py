@@ -1,7 +1,7 @@
 """ Implementation of Gauci et al's controller which uses our calibrated image
 inputs.  Doesn't seem to work very well. """
 
-from controller import Controller
+from .controller import Controller
 from math import fabs, pi
 from common import *
 from configsingleton import ConfigSingleton
